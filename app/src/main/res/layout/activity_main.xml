@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:background="@drawable/grad_bg">
+
+    <RelativeLayout
+        android:id="@+id/visualizador_rellay1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:background="@drawable/layout_bg"
+        >
+
+        <ImageView
+            android:id="@+id/visualizador_iv_photo"
+            android:layout_width="360dp"
+            android:layout_height="230dp"
+            android:layout_margin="20dp"
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentTop="true"
+            android:background="@drawable/layout_bg"
+            />
+
+        <LinearLayout
+            android:id="@+id/visualizador_linlay1"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:layout_marginBottom="20dp"
+            android:layout_below="@+id/visualizador_iv_photo"
+            android:background="@drawable/layout_bg"
+            >
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/visualizador_recycler"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_alignStart="@+id/visualizador_linlay1"
+                android:orientation="horizontal" />
+        </LinearLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/visualizador_linlay1"
+            >
+
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/floatingActionButton"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:background="@drawable/layout_bg"
+                android:clickable="true"
+                android:src="@android:drawable/ic_input_add" />
+        </RelativeLayout>
+
+    </RelativeLayout>
+
+</RelativeLayout>
