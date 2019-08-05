@@ -7,46 +7,52 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Predicate;
 
 import senac.visualizadordeimagem.adapters.PhotoAdapter;
 import senac.visualizadordeimagem.models.Photo;
 
 public class MainActivity extends AppCompatActivity {
 
+    /* Identificadores */
+    /* Solicitação de inicialização de atividade */
     private static final int PICK_IMAGE_REQUEST = 1;
-    private int selected = 0;
+
+    /* Variáveis */
+    private int numPhotosForDelete = 0;
+
+    /* Models */
     private Photo mainPhoto;
     private List<Photo> listPhotos = new ArrayList<>();
+
+    /* RecyclerView, LayoutManager e Adapter */
     private PhotoAdapter photoAdapter;
-    private ImageView ivMainPhoto;
     private RecyclerView rvPhotos;
     private RecyclerView.LayoutManager lmPhotos;
+
+    /* Buttons */
     private ImageButton btnNewPhoto;
     private ImageButton btnAddPhoto;
     private ImageButton btnDeletePhoto;
+
+    /* Clicks Listener */
+    private View.OnLongClickListener checkedPhotos;
+    private View.OnClickListener selectedPhoto;
+
+    /* Itens do layout activity */
     private LinearLayout linlay1;
     private TextView tvImgSelec;
-    /*private FloatingActionButton addPhoto;
-    private FloatingActionButton removePhoto;*/
-    private View.OnLongClickListener checkedPhoto;
-    private View.OnClickListener selectedPhoto;
-    private Uri mImageUri;
-    private ProgressBar pbLoandig;
+    private ImageView ivMainPhoto;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,20 +83,37 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void clickable() {
-        checkedPhoto = new View.OnLongClickListener() {
+        /* ---------------------- Clicks no RecyclerView ---------------------- */
+        /* Marca fotos para a exclusão */
+        checkedPhotos = new View.OnLongClickListener() {
             @Override
+            /* Após o click longo na imagem dentro do RecyclerView */
             public boolean onLongClick(View view) {
+                /* view.getTag(): captura o viewholder clicado atrelado ao RecyclerView */
                 RecyclerView.ViewHolder viewHolder = (RecyclerView.ViewHolder) view.getTag();
-                int position = viewHolder.getAdapterPosition();
-                if(!listPhotos.get(position).isSelected()){
-                   selected++;
-                }else
-                   selected--;
 
+                /* Captura a posição correspondente no adapter */
+                int position = viewHolder.getAdapterPosition();
+
+                /*
+                 * Se não estiver sido selecionado, então adicione no contador de imagens
+                 * selecionadas; senão, retire do contador.
+                 */
+                if(!listPhotos.get(position).isSelected()){
+                   numPhotosForDelete++;
+                }else
+                   numPhotosForDelete--;
+
+                /* Altera o estado de marcação (boolean) */
                 listPhotos.get(position).setSelect();
+
+                /* Informa ao adapter que houve ateração nos dados */
                 photoAdapter.notifyDataSetChanged();
 
-                if(selected > 0){
+                /* Determina se o botão de excluir fotos será apresentado ou não no layout.
+                 * Se a quantidade de fotos no contador for maior que 0, então apresente-o;
+                 * Senão, esconda-o*/
+                if(numPhotosForDelete > 0){
                     btnDeletePhoto.setVisibility(View.VISIBLE);
                     return true;
                 }
@@ -100,19 +123,31 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
-        photoAdapter.setCheckedItem(checkedPhoto);
+        photoAdapter.setCheckedItem(checkedPhotos);
 
+        /* Seleciona a foto no RecyclerView para apresentar no layout de imagem principal */
         selectedPhoto = new View.OnClickListener() {
             @Override
+            /* Após o click curto na imagem dentro do RecyclerView */
             public void onClick(View view) {
+                /* view.getTag(): captura o viewholder clicado atrelado ao RecyclerView */
                 RecyclerView.ViewHolder viewHolder = (RecyclerView.ViewHolder) view.getTag();
+
+                /* Captura a posição correspondente no adapter */
                 int position = viewHolder.getAdapterPosition();
+
+                /* Atualiza a foto principal */
                 mainPhoto = listPhotos.get(position);
-                Picasso.get().load(mainPhoto.getImage()).resize(360,200).into(ivMainPhoto);
+
+                /* Apresenta a foto no layout main */
+                Picasso.get().load(mainPhoto.getImage())
+                        .resize(360,200)
+                        .into(ivMainPhoto);
             }
         };
         photoAdapter.setSelectedItem(selectedPhoto);
 
+        /* Adiciona uma foto ao RecyclerView via câmera */
         btnNewPhoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -120,6 +155,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        /* ---------------------- Clicks em Buttons ---------------------- */
+        /* Adciona fotos ao RecyclerView via External Storage */
         btnAddPhoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -127,11 +164,18 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        /* Deleta as fotos selecionadas no RecyclerView */
         btnDeletePhoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(selected > 0){
+                /* Apaga as fotos se houver pelo menos uma foto selecionada */
+                if(numPhotosForDelete > 0){
+                    /* Percorre o ArrayList de Photos */
                     for(int i=0; i < listPhotos.size(); i++){
+                        /*
+                         *  Se a foto estiver selecionada, então remova-a e determine qual foto será
+                         *  a foto principal
+                         */
                         if(listPhotos.get(i).isSelected()) {
                             if(listPhotos.get(i).equals(mainPhoto)) {
                                     listPhotos.remove(i);
@@ -141,25 +185,31 @@ public class MainActivity extends AppCompatActivity {
                                 listPhotos.remove(i);
                             i--;
                         }
+
                     }
 
-                    selected = 0;
+                    /* Zera o contado de fotos selecionadas */
+                    numPhotosForDelete = 0;
+
+                    /* notifica o adapter sobre a modificação no List associado a ele */
                     photoAdapter.notifyDataSetChanged();
+
+                    /* esconde o botão de exclusão de fotos */
                     btnDeletePhoto.setVisibility(View.GONE);
 
-                    if(!listPhotos.isEmpty()){
-                        Picasso.get().load(mainPhoto.getImage()).resize(360, 200).into(ivMainPhoto);
-                    }else{
-                        mainPhoto = null;
-                        ivMainPhoto.setVisibility(View.GONE);
-                        linlay1.setVisibility(View.GONE);
-                        tvImgSelec.setVisibility(View.VISIBLE);
-                    }
+                    /* Determina se será apresentado os layouts de foto e RecycleView */
+                    setPhotosView();
                 }
             }
         });
     }
 
+    /* ----------------- Gera resultados a partir de uma activity ----------------- */
+    /*
+     *  openFileChooser(): Busca uma imagem através de uma activity padrão e retorna o resultado via
+     *      identificado (PICK_IMAGE_REQUEST). Quando o usuário terminar esta atividade, o sistema
+     *      chamará o método onActivityResult()
+     */
     private void openFileChooser() {
         Intent intent = new Intent();
         intent.setType("image/*");
@@ -167,26 +217,52 @@ public class MainActivity extends AppCompatActivity {
         startActivityForResult(intent,PICK_IMAGE_REQUEST);
     }
 
+    /*
+     *  onActivityResult(): recebe o resultado obtido pelo método openFileChooser. Possui três
+     *      argumentos. O requestCode indica o código de solicitação passado ao método
+     *      startActivityForResult(); resultCode informa o código de resultado pela atividade gerada
+     *      em openFileChooser; data que é o Intent com os dados coletados, que no caso é aquela um
+     *      arquivo de foto qualquer.
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
+        /*  Se o código de requisição for PICK_IMAGE_REQUEST, resultado ok, houve dados não nulos,
+         *      então, adicione uma foto ao RecyclerView.
+         */
         if(requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK
                 && data != null && data.getData() != null){
             Photo photo = new Photo(data.getData());
             listPhotos.add(photo);
             photoAdapter.notifyDataSetChanged();
-            if(listPhotos.size() > 0) {
-                ivMainPhoto.setVisibility(View.VISIBLE);
-                linlay1.setVisibility(View.VISIBLE);
-                tvImgSelec.setVisibility(View.GONE);
 
-                if (listPhotos.size() == 1) {
-                    mainPhoto = listPhotos.get(0);
-                    Picasso.get().load(mainPhoto.getImage()).resize(360, 200).into(ivMainPhoto);
-                }
-            }
+            /* Determina se será apresentado os layouts de foto e RecycleView */
+            setPhotosView();
         }
     }
+
+    /*  setPhotosView(): controla a visibilidade dos elementos responsáveis pela apresentação das
+     *      imagens. Se não houver fotos no adaptador de fotos, então tais elementos são escondidos;
+     *      caso contrário, serão apresentados.
+     */
+    private void setPhotosView(){
+        if(listPhotos.isEmpty()) {
+            mainPhoto = null;
+            ivMainPhoto.setVisibility(View.GONE);
+            linlay1.setVisibility(View.GONE);
+            tvImgSelec.setVisibility(View.VISIBLE);
+        }else{
+            ivMainPhoto.setVisibility(View.VISIBLE);
+            linlay1.setVisibility(View.VISIBLE);
+            tvImgSelec.setVisibility(View.GONE);
+            if (listPhotos.size() == 1)
+                mainPhoto = listPhotos.get(0);
+            Picasso.get().load(mainPhoto.getImage()).resize(360, 200).into(ivMainPhoto);
+        }
+    }
+
+    /*
 
     private static final String SCREEN_TEXT_KEY = "TELA VISUALIZADOR";
 
@@ -205,5 +281,5 @@ public class MainActivity extends AppCompatActivity {
         mainPhoto = inState.getParcelable(SCREEN_TEXT_KEY);
     }
 
-
+    */
 }

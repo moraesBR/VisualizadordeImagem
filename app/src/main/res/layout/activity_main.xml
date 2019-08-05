@@ -55,7 +55,7 @@
             android:id="@+id/rellay2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-
+            android:padding="10dp"
             android:layout_marginRight="5dp"
             android:layout_marginLeft="5dp"
             android:layout_below="@+id/visualizador_linlay1"
@@ -65,11 +65,8 @@
                 android:id="@+id/tv_img_selec"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="sans-serif-medium"
+                android:fontFamily="sans-serif-condensed-light"
                 android:text="Selecionar Imagens"
-                android:layout_marginTop="10dp"
-                android:layout_marginStart="10dp"
-                android:padding="10dp"
                 android:layout_alignParentStart="true"
                 android:layout_centerInParent="true"
                 android:gravity="center_vertical"
@@ -87,7 +84,7 @@
                 android:layout_centerInParent="true"
                 android:background="@drawable/layout_bg"
                 android:backgroundTint="@color/transparent"
-                android:src="@android:drawable/ic_menu_camera"
+                android:src="@drawable/ic_new_photo"
                 />
 
             <ImageButton
@@ -96,10 +93,10 @@
                 android:layout_height="wrap_content"
                 android:layout_toStartOf="@+id/btn_new_photo"
                 android:layout_centerInParent="true"
-                android:layout_marginEnd="5dp"
+                android:layout_marginEnd="10dp"
                 android:background="@drawable/layout_bg"
                 android:backgroundTint="@color/transparent"
-                android:src="@android:drawable/ic_menu_add"
+                android:src="@drawable/ic_add"
                 />
 
             <ImageButton
@@ -108,11 +105,11 @@
                 android:layout_centerInParent="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="5dp"
+                android:layout_marginEnd="10dp"
                 android:background="@drawable/layout_bg"
                 android:backgroundTint="@color/transparent"
                 android:visibility="gone"
-                android:src="@android:drawable/ic_menu_delete"
+                android:src="@drawable/ic_remove"
                 />
 
         </RelativeLayout>
