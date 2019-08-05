@@ -8,11 +8,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
@@ -24,16 +26,15 @@ import senac.visualizadordeimagem.models.Photo;
 
 public class MainActivity extends AppCompatActivity {
 
-    /* Identificadores */
-    /* Solicitação de inicialização de atividade */
-    private static final int PICK_IMAGE_REQUEST = 1;
-
-    /* Variáveis */
+    /* ------------------------- Variáveis -------------------------- */
+    /* Contador de fotos para deletar do RecyclerView */
     private int numPhotosForDelete = 0;
+    /* Armazena a configuração prévia do layout do RecycleView */
+    private Parcelable savedRecyclerLayout;
 
     /* Models */
     private Photo mainPhoto;
-    private List<Photo> listPhotos = new ArrayList<>();
+    private List<Photo> listPhotos;
 
     /* RecyclerView, LayoutManager e Adapter */
     private PhotoAdapter photoAdapter;
@@ -54,14 +55,58 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvImgSelec;
     private ImageView ivMainPhoto;
 
+    /* ------------------------- Identificadores -------------------------- */
+    /* Solicitação de inicialização de atividade */
+    private static final int PICK_IMAGE_REQUEST = 1;
+    /* Referência ao conteúdo do Array List de Photos */
+    private static final String LIST_STATE = "list_state";
+    /* Referência à foto principal do layout */
+    private static final String MAIN_PHOTO = "main_photo";
+    /* Referência à configuração de layout do RecyclerView */
+    private static final String BUNDLE_RECYCLER_LAYOUT = "recycler_layout";
+
+/* ---------------------------------- Ciclo de Vida do App -------------------------------------- */
+    /*
+     *  Métodos
+     *      onCreate():
+     *      onSaveInstanceState():
+     *      onRestoreInstanceState():
+     */
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         dataBindView();
-        setAdapter();
+        setAdapter(savedInstanceState);
         clickable();
     }
+
+    /* ---------------------- SALVAR CONTEXTO ---------------------- */
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState){
+        super.onSaveInstanceState(outState);
+        outState.putParcelableArrayList(LIST_STATE, (ArrayList<? extends Parcelable>) listPhotos);
+        outState.putParcelable(MAIN_PHOTO,mainPhoto);
+        outState.putParcelable(BUNDLE_RECYCLER_LAYOUT,rvPhotos.getLayoutManager().onSaveInstanceState());
+    }
+
+    @Override
+    protected void onRestoreInstanceState(@NonNull Bundle inState){
+        super.onRestoreInstanceState(inState);
+        listPhotos  = inState.getParcelableArrayList(LIST_STATE);
+        mainPhoto   = inState.getParcelable(MAIN_PHOTO);
+        savedRecyclerLayout    = inState.getParcelable(BUNDLE_RECYCLER_LAYOUT);
+    }
+
+/* ---------------------------------- Métodos Data Binding -------------------------------------- */
+    /*
+     *  Métodos
+     *      dataBindView(): Realiza a ligação dos elementos do layout com variáveis programáveis.
+     *      setAdapter(): Configura os dados e o layout do RecyclerView de fotos.
+     */
+
 
     private void dataBindView(){
         ivMainPhoto    = findViewById(R.id.visualizador_iv_photo);
@@ -73,15 +118,62 @@ public class MainActivity extends AppCompatActivity {
         tvImgSelec     = findViewById(R.id.tv_img_selec);
     }
 
-    private void setAdapter() {
-        photoAdapter = new PhotoAdapter(listPhotos,getBaseContext());
-        lmPhotos     = new LinearLayoutManager(getBaseContext(),
-                LinearLayoutManager.HORIZONTAL,false);
+    private void setAdapter(Bundle savedInstanceState) {
+        if(savedInstanceState != null) {
+            listPhotos = savedInstanceState.getParcelableArrayList(LIST_STATE);
+            mainPhoto  = savedInstanceState.getParcelable(MAIN_PHOTO);
+        }else{
+            listPhotos = new ArrayList<>();
+            mainPhoto = null;
+        }
+
+        photoAdapter = new PhotoAdapter(listPhotos, getBaseContext());
+        lmPhotos = new LinearLayoutManager(getBaseContext(),
+                LinearLayoutManager.HORIZONTAL, false);
         rvPhotos.setLayoutManager(lmPhotos);
         rvPhotos.setHasFixedSize(true);
         rvPhotos.setAdapter(photoAdapter);
+
+        if (savedRecyclerLayout != null){
+            rvPhotos.getLayoutManager().onRestoreInstanceState(savedRecyclerLayout);
+        }
+
+        setPhotosView();
     }
 
+/* ---------------------------------- Métodos de Controles -------------------------------------- */
+    /*
+     *  Métodos
+     *      setPhotosView(): controla a visibilidade dos elementos responsáveis pela apresentação
+     *          das imagens.
+     *      clickable(): Controla as ações de cliques dos botões e afins
+     */
+
+
+    /*  setPhotosView(): controla a visibilidade dos elementos responsáveis pela apresentação das
+     *      imagens. Se não houver fotos no adaptador de fotos, então tais elementos são escondidos;
+     *      caso contrário, serão apresentados.
+     */
+    private void setPhotosView(){
+        if(listPhotos.isEmpty()) {
+            mainPhoto = null;
+            ivMainPhoto.setVisibility(View.GONE);
+            linlay1.setVisibility(View.GONE);
+            tvImgSelec.setVisibility(View.VISIBLE);
+        }else{
+            ivMainPhoto.setVisibility(View.VISIBLE);
+            linlay1.setVisibility(View.VISIBLE);
+            tvImgSelec.setVisibility(View.GONE);
+            if (listPhotos.size() == 1)
+                mainPhoto = listPhotos.get(0);
+            Picasso.get().load(mainPhoto.getImage())
+                    .resize(360, 200)
+                    .into(ivMainPhoto);
+        }
+    }
+
+
+    /* clickable(): Controla as ações de cliques dos botões e afins */
     private void clickable() {
         /* ---------------------- Clicks no RecyclerView ---------------------- */
         /* Marca fotos para a exclusão */
@@ -204,7 +296,15 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    /* ----------------- Gera resultados a partir de uma activity ----------------- */
+
+/* ---------------------------------- Métodos auxiliares ---------------------------------------- */
+    /*
+     *  Métodos
+     *      openFileChooser(): Busca uma imagem através de uma activity padrão
+     *      onActivityResult():  Recebe e trata o resultado obtido pelo método openFileChooser.
+     */
+
+    /* ----------------- Gerar resultados a partir de uma activity ----------------- */
     /*
      *  openFileChooser(): Busca uma imagem através de uma activity padrão e retorna o resultado via
      *      identificado (PICK_IMAGE_REQUEST). Quando o usuário terminar esta atividade, o sistema
@@ -218,8 +318,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /*
-     *  onActivityResult(): recebe o resultado obtido pelo método openFileChooser. Possui três
-     *      argumentos. O requestCode indica o código de solicitação passado ao método
+     *  onActivityResult(): Recebe e trata o resultado obtido pelo método openFileChooser. Possui
+     *      três argumentos. O requestCode indica o código de solicitação passado ao método
      *      startActivityForResult(); resultCode informa o código de resultado pela atividade gerada
      *      em openFileChooser; data que é o Intent com os dados coletados, que no caso é aquela um
      *      arquivo de foto qualquer.
@@ -241,45 +341,4 @@ public class MainActivity extends AppCompatActivity {
             setPhotosView();
         }
     }
-
-    /*  setPhotosView(): controla a visibilidade dos elementos responsáveis pela apresentação das
-     *      imagens. Se não houver fotos no adaptador de fotos, então tais elementos são escondidos;
-     *      caso contrário, serão apresentados.
-     */
-    private void setPhotosView(){
-        if(listPhotos.isEmpty()) {
-            mainPhoto = null;
-            ivMainPhoto.setVisibility(View.GONE);
-            linlay1.setVisibility(View.GONE);
-            tvImgSelec.setVisibility(View.VISIBLE);
-        }else{
-            ivMainPhoto.setVisibility(View.VISIBLE);
-            linlay1.setVisibility(View.VISIBLE);
-            tvImgSelec.setVisibility(View.GONE);
-            if (listPhotos.size() == 1)
-                mainPhoto = listPhotos.get(0);
-            Picasso.get().load(mainPhoto.getImage()).resize(360, 200).into(ivMainPhoto);
-        }
-    }
-
-    /*
-
-    private static final String SCREEN_TEXT_KEY = "TELA VISUALIZADOR";
-
-
-    @Override
-    protected void onSaveInstanceState(@NonNull Bundle outState){
-        super.onSaveInstanceState(outState);
-        outState.putParcelable(SCREEN_TEXT_KEY,lmPhotos.onSaveInstanceState());
-        outState.putParcelable(SCREEN_TEXT_KEY,mainPhoto);
-    }
-
-    @Override
-    protected void onRestoreInstanceState(@NonNull Bundle inState){
-        super.onRestoreInstanceState(inState);
-        lmPhotos  = inState.getParcelable(SCREEN_TEXT_KEY);
-        mainPhoto = inState.getParcelable(SCREEN_TEXT_KEY);
-    }
-
-    */
 }
